@@ -106,15 +106,25 @@ if __name__ == "__main__":
     p30Nok = (169.837325, 700.0334453, 372.398311,
               -179.999244, -0.000734286, 88.845311)
 
-    absolu = pose_absolue(fCell, p30Nok)
+    # Repère auquel le bloc (screen 5) est rattaché dans SRS
+    parent_du_bloc = fCell
 
     noms = ("x", "y", "z", "rx", "ry", "rz")
-    print("Coordonnées absolues (repère world) à appliquer au bloc :")
-    for n, v in zip(noms, absolu):
-        unite = "mm" if n in ("x", "y", "z") else "deg"
-        print(f"  {n:>2} = {v:14.6f} {unite}")
 
-    # Vérification : retour dans le repère fCell
-    retour = pose_relative(fCell, absolu)
-    err = max(abs(a - b) for a, b in zip(retour, p30Nok))
-    print(f"\nVérification aller-retour (écart max) : {err:.2e}")
+    def afficher(titre, pose):
+        print(titre)
+        for n, v in zip(noms, pose):
+            unite = "mm" if n in ("x", "y", "z") else "deg"
+            print(f"  {n:>2} = {v:14.6f} {unite}")
+
+    # 1) Pose absolue du point dans le monde
+    absolu = pose_absolue(fCell, p30Nok)
+    afficher("Pose absolue du point (repère world) :", absolu)
+
+    # 2) Pose à saisir sur le bloc, exprimée dans son repère parent
+    pose_bloc = pose_relative(parent_du_bloc, absolu)
+    afficher("\nCoordonnées à appliquer au bloc (rattaché à fCell) :", pose_bloc)
+
+    # Contrôle : le bloc ainsi placé retombe bien sur le point dans le monde
+    err = max(abs(a - b) for a, b in zip(pose_absolue(parent_du_bloc, pose_bloc), absolu))
+    print(f"\nVérification (écart max dans le monde) : {err:.2e}")
